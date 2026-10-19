@@ -96,6 +96,29 @@ Yahoo limits how many requests it accepts. When it does, you'll see messages lik
 
 If many stocks are missing, wait a few minutes and run the script again.
 
+## Daily summary on Telegram
+
+`daily.py` runs one market, compares it with the previous run and sends a short
+Telegram message: new Strong buys, upgrades / downgrades, RSI below 30, stocks
+becoming overbought, MACD crossovers and the top 5, with the report attached.
+
+```bash
+set TELEGRAM_TOKEN=123456789:AAH...
+set TELEGRAM_CHAT_ID=987654321
+python daily.py cac40
+```
+
+### Home Assistant add-on
+
+This repository is also a Home Assistant add-on repository, to run the daily
+summary on a Home Assistant OS machine (e.g. a Raspberry Pi 4):
+add `https://github.com/Peperperrier/boursicateur` in **Settings → Add-ons →
+Add-on store → ⋮ → Repositories** and install **Boursicateur**. Home Assistant
+automations trigger each market (CAC 40 at 18:00, S&P 500 at 22:30); the add-on
+sends the Telegram summary, publishes the report under `/local/` and creates a
+`sensor.boursicateur_<market>` sensor. Setup steps and automations:
+[ha-addon/DOCS.md](ha-addon/DOCS.md).
+
 ## Customising
 
 - **CAC 40 list**: the index changes a few times a year. Edit the `CAC40` dictionary
@@ -112,5 +135,7 @@ If many stocks are missing, wait a few minutes and run the script again.
 | `cac40_screener.py` | Indicators, scoring, data fetching, report writer, CAC 40 list |
 | `sp500_screener.py` | S&P 500 list (from Wikipedia), reuses `cac40_screener.py` |
 | `template.html` | Report page shared by both screeners |
+| `daily.py` | Daily run: report, change summary, Telegram, Home Assistant sensor |
+| `repository.yaml`, `ha-addon/` | Home Assistant add-on (config, Dockerfile, runner, docs) |
 | `run.bat`, `run_sp500.bat` | Windows launchers |
 | `requirements.txt` | Python dependencies (`yfinance`, `pandas`, `requests`, `lxml`) |

@@ -14,6 +14,7 @@ point for your own research.
 import argparse
 import json
 import math
+import os
 import random
 import sys
 import time
@@ -29,7 +30,8 @@ HERE = Path(__file__).resolve().parent
 TEMPLATE = HERE / "template.html"
 OUT_HTML = HERE / "cac40_report.html"
 OUT_JSON = HERE / "cac40_data.json"
-CACHE = HERE / ".cache" / "fundamentals.json"
+# The Home Assistant add-on keeps its cache in its persistent /data folder.
+CACHE = Path(os.environ.get("BOURSICATEUR_CACHE") or HERE / ".cache" / "fundamentals.json")
 CACHE_HOURS = 24  # fundamentals move slowly: reuse them to avoid Yahoo rate limits
 
 # CAC 40 constituents (Yahoo tickers). The index composition changes a few times
@@ -413,7 +415,7 @@ def cached_fundamentals(tickers: list, refresh: bool = False) -> dict:
     for t, data in fetched.items():
         if data:  # never cache a failure
             cache[t] = {"t": now, "data": data}
-    CACHE.parent.mkdir(exist_ok=True)
+    CACHE.parent.mkdir(parents=True, exist_ok=True)
     CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
     return {**fresh, **fetched}
 
