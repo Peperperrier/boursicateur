@@ -20,6 +20,8 @@
     }
   }
   * { box-sizing: border-box; }
+  /* stop mobile browsers from inflating the font of long text blocks (detail row) */
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   body { margin: 0; font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
          background: var(--bg); color: var(--text); }
   main { max-width: 1400px; margin: 0 auto; padding: 20px 16px 60px; }
@@ -44,6 +46,8 @@
   tbody tr.main { cursor: pointer; }
   tbody tr.main:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
   .name b { display: block; } .name small { color: var(--muted); }
+  a.ext { color: var(--accent); text-decoration: none; font-size: 11px; }
+  a.ext:hover { text-decoration: underline; }
   .pill { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 600; }
   .s-Strong.buy, .sig-Strong { color: var(--green); background: var(--green-bg); }
   .sig-Buy { color: var(--lgreen); background: var(--lgreen-bg); }
@@ -154,13 +158,20 @@ function peCell(v) {
   return `<span class="${c}">${v.toFixed(1)}</span>`;
 }
 
+function links(t) {
+  const a = (href, label, title) => `<a class="ext" href="${href}" target="_blank" rel="noopener" title="${title}">${label}</a>`;
+  let out = a(`https://finance.yahoo.com/quote/${encodeURIComponent(t)}`, "Yahoo", "Open on Yahoo Finance");
+  if (t.endsWith(".PA")) out += " " + a(`https://www.boursorama.com/cours/1rP${encodeURIComponent(t.slice(0, -3))}/`, "Bourso", "Open on Boursorama");
+  return out;
+}
+
 function scoreCell(s) {
   const c = s.score >= 70 ? "var(--green)" : s.score >= 60 ? "var(--lgreen)" : s.score >= 45 ? "var(--amber)" : "var(--red)";
   return `<span class="score">${s.score.toFixed(0)}<i style="--w:${s.score}%;--c:${c}"></i></span>`;
 }
 
 const COLS = [
-  { k: "name", t: "Stock", l: true, f: s => `<span class="name"><b>${s.name}</b><small>${s.ticker}${s.sector ? " · " + s.sector : ""}${s.partial ? ' · <span class="warn" title="Yahoo returned no fundamentals: score uses technicals only">⚠ no fundamentals</span>' : ""}</small></span>` },
+  { k: "name", t: "Stock", l: true, f: s => `<span class="name"><b>${s.name}</b><small>${s.ticker} ${links(s.ticker)}${s.sector ? " · " + s.sector : ""}${s.partial ? ' · <span class="warn" title="Yahoo returned no fundamentals: score uses technicals only">⚠ no fundamentals</span>' : ""}</small></span>` },
   { k: "score", t: "Score", f: scoreCell },
   { k: "signal", t: "Signal", l: true, sort: s => s.score, f: s => `<span class="pill sig-${sigKey(s.signal)}">${s.signal}</span>` },
   { k: "price", t: "Price", f: s => num(s.price, 2) },
@@ -274,6 +285,7 @@ document.getElementById("head").addEventListener("click", e => {
   render();
 });
 document.getElementById("body").addEventListener("click", e => {
+  if (e.target.closest("a")) return;
   const t = e.target.closest("tr.main")?.dataset.t; if (!t) return;
   open.has(t) ? open.delete(t) : open.add(t); render();
 });
