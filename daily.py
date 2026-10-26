@@ -6,7 +6,7 @@ Used by the Home Assistant add-on (ha-addon/), but runs anywhere:
 
     set TELEGRAM_TOKEN=123:ABC
     set TELEGRAM_CHAT_ID=987654
-    python daily.py cac40          # or sp500
+    python daily.py cac60          # or sp500
 """
 
 import html
@@ -19,13 +19,13 @@ from pathlib import Path
 
 import requests
 
-from cac40_screener import CAC40, build, write_report
+from cac40_screener import CAC60, build, write_report
 from sp500_screener import sp500_constituents
 
 HERE = Path(__file__).resolve().parent
 
 MARKETS = {
-    "cac40": {"title": "CAC 40", "currency": "€", "universe": lambda: CAC40},
+    "cac60": {"title": "CAC 60", "currency": "€", "universe": lambda: CAC60},
     "sp500": {"title": "S&P 500", "currency": "$", "universe": sp500_constituents},
 }
 SIGNALS = ["Strong buy", "Buy", "Hold", "Avoid"]

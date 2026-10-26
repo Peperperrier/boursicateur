@@ -1,10 +1,10 @@
 # Boursicateur add-on
 
-Runs the CAC 40 / S&P 500 screener on Home Assistant, sends a short summary on
+Runs the CAC 60 (CAC 40 + CAC Next 20) / S&P 500 screener on Home Assistant, sends a short summary on
 Telegram, publishes the HTML report in Home Assistant and creates a sensor per market.
 
 The add-on waits for commands: your Home Assistant automations decide when each
-market runs (by default CAC 40 at 18:00 and S&P 500 at 22:30, after each market closes).
+market runs (by default CAC 60 at 18:00 and S&P 500 at 22:30, after each market closes).
 
 ## 1. Create the Telegram bot
 
@@ -40,8 +40,8 @@ with the exact URL above; check it in your browser's address bar on the add-on p
 and adjust if it differs.
 
 ```yaml
-alias: Boursicateur - CAC 40
-description: CAC 40 screener after the Paris close
+alias: Boursicateur - CAC 60
+description: CAC 60 screener after the Paris close
 triggers:
   - trigger: time
     at: "18:00:00"
@@ -52,7 +52,7 @@ actions:
   - action: hassio.addon_stdin
     data:
       addon: e4274ed5_boursicateur
-      input: cac40
+      input: cac60
 mode: single
 ```
 
@@ -75,18 +75,18 @@ mode: single
 
 To stop a market, disable its automation. To run one right now, use
 **Developer tools → Actions → `hassio.addon_stdin`** with the same data, and follow the
-progress in the add-on **Log** tab.
+progress in the add-on **Log** tab. The old `cac40` input still works and runs the CAC 60.
 
 ## What you get
 
 - **Telegram message**: signal counts, new Strong buys, upgrades / downgrades since the
   last run, RSI below 30, stocks becoming overbought, MACD crossovers, top 5.
-- **Report**: `/config/www/<www_folder>/cac40_report.html` (and `sp500_report.html`),
-  opens at `http://<your-ha>:8123/local/<www_folder>/cac40_report.html`. You can show it
+- **Report**: `/config/www/<www_folder>/cac60_report.html` (and `sp500_report.html`),
+  opens at `http://<your-ha>:8123/local/<www_folder>/cac60_report.html`. You can show it
   on a dashboard with a **Webpage** card.
   If `/config/www` didn't exist before the first run, restart Home Assistant once so
   that `/local/` serves it.
-- **Sensors** `sensor.boursicateur_cac40` and `sensor.boursicateur_sp500`: the state is
+- **Sensors** `sensor.boursicateur_cac60` and `sensor.boursicateur_sp500`: the state is
   the number of Strong buys; the attributes hold the other counts, the top 5, the
   oversold stocks and the report URL. They are recreated at each run (they disappear
   after a Home Assistant restart until the next run).
@@ -97,7 +97,7 @@ Example: notify when a stock becomes oversold.
 alias: Boursicateur - oversold alert
 triggers:
   - trigger: state
-    entity_id: sensor.boursicateur_cac40
+    entity_id: sensor.boursicateur_cac60
     attribute: oversold
 conditions:
   - condition: template
@@ -105,7 +105,7 @@ conditions:
 actions:
   - action: persistent_notification.create
     data:
-      title: CAC 40 oversold
+      title: CAC 60 oversold
       message: "{{ trigger.to_state.attributes.oversold | join(', ') }}"
 ```
 

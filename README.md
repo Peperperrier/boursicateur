@@ -1,6 +1,6 @@
 # Boursicateur
 
-Stock screeners for the **CAC 40** and the **S&P 500**. They download prices and
+Stock screeners for the **CAC 60** (CAC 40 + CAC Next 20) and the **S&P 500**. They download prices and
 fundamentals from Yahoo Finance, compute technical and valuation indicators, give
 each stock a score and a signal (**Strong buy / Buy / Hold / Avoid**), and write a
 self-contained HTML report you open in your browser.
@@ -20,7 +20,7 @@ pip install -r requirements.txt
 
 | Command | What it does |
 |---|---|
-| `run.bat` | CAC 40 report, opened in the browser (Windows, double-click) |
+| `run.bat` | CAC 60 report, opened in the browser (Windows, double-click) |
 | `run_sp500.bat` | S&P 500 report, opened in the browser (Windows, double-click) |
 | `python cac40_screener.py --open` | Same as `run.bat` |
 | `python sp500_screener.py --open` | Same as `run_sp500.bat` |
@@ -29,10 +29,10 @@ pip install -r requirements.txt
 
 Outputs are written next to the scripts:
 
-- `cac40_report.html` / `sp500_report.html`: the report (open it in any browser)
-- `cac40_data.json` / `sp500_data.json`: the raw data behind it
+- `cac60_report.html` / `sp500_report.html`: the report (open it in any browser)
+- `cac60_data.json` / `sp500_data.json`: the raw data behind it
 
-A run takes about 30 seconds for the CAC 40 and 1 minute for the S&P 500, longer
+A run takes about 30 seconds for the CAC 60 and 1 minute for the S&P 500, longer
 if Yahoo is rate-limiting you (see below).
 
 ## The report
@@ -105,7 +105,7 @@ becoming overbought, MACD crossovers and the top 5, with the report attached.
 ```bash
 set TELEGRAM_TOKEN=123456789:AAH...
 set TELEGRAM_CHAT_ID=987654321
-python daily.py cac40
+python daily.py cac60
 ```
 
 ### Home Assistant add-on
@@ -114,16 +114,16 @@ This repository is also a Home Assistant add-on repository, to run the daily
 summary on a Home Assistant OS machine (e.g. a Raspberry Pi 4):
 add `https://github.com/Peperperrier/boursicateur` in **Settings → Add-ons →
 Add-on store → ⋮ → Repositories** and install **Boursicateur**. Home Assistant
-automations trigger each market (CAC 40 at 18:00, S&P 500 at 22:30); the add-on
+automations trigger each market (CAC 60 at 18:00, S&P 500 at 22:30); the add-on
 sends the Telegram summary, publishes the report under `/local/` and creates a
 `sensor.boursicateur_<market>` sensor. Setup steps and automations:
 [ha-addon/DOCS.md](ha-addon/DOCS.md).
 
 ## Customising
 
-- **CAC 40 list**: the index changes a few times a year. Edit the `CAC40` dictionary
-  at the top of `cac40_screener.py` (Yahoo ticker → name). You can add any stock
-  outside the index the same way, e.g. `"AM.PA": "Dassault Aviation"`.
+- **CAC 60 list**: the indices change a few times a year. Edit the `CAC40` and
+  `CAC_NEXT20` dictionaries at the top of `cac40_screener.py` (Yahoo ticker → name).
+  You can add any stock outside the indices the same way, e.g. `"BOL.PA": "Bolloré"`.
 - **S&P 500 list**: fetched from Wikipedia at every run, nothing to maintain.
 - **Another market**: copy `sp500_screener.py`, give it a `{ticker: name}` dictionary
   and call `build()` then `write_report()`.
@@ -132,7 +132,7 @@ sends the Telegram summary, publishes the report under `/local/` and creates a
 
 | File | Role |
 |---|---|
-| `cac40_screener.py` | Indicators, scoring, data fetching, report writer, CAC 40 list |
+| `cac40_screener.py` | Indicators, scoring, data fetching, report writer, CAC 40 / CAC Next 20 lists |
 | `sp500_screener.py` | S&P 500 list (from Wikipedia), reuses `cac40_screener.py` |
 | `template.html` | Report page shared by both screeners |
 | `daily.py` | Daily run: report, change summary, Telegram, Home Assistant sensor |

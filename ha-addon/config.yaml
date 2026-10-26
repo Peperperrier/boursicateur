@@ -1,7 +1,7 @@
 name: Boursicateur
-version: "1.0.0"
+version: "1.1.0"
 slug: boursicateur
-description: CAC 40 / S&P 500 stock screener with daily Telegram summaries
+description: CAC 60 (CAC 40 + Next 20) / S&P 500 stock screener with daily Telegram summaries
 url: https://github.com/Peperperrier/boursicateur
 arch:
   - aarch64

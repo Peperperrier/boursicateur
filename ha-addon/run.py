@@ -1,6 +1,6 @@
 """
 Home Assistant add-on entry point. Waits for commands on stdin, sent by the
-hassio.addon_stdin action (input: cac40 or sp500), and runs that market.
+hassio.addon_stdin action (input: cac60 or sp500), and runs that market.
 """
 
 import json
@@ -13,6 +13,8 @@ sys.path.insert(0, "/app")
 import daily  # noqa: E402
 
 OPTIONS = Path("/data/options.json")
+# Older automations still send cac40: it now runs the CAC 60.
+ALIASES = {"cac40": "cac60"}
 
 
 def settings() -> dict:
@@ -35,8 +37,9 @@ def main():
         chunk = os.read(0, 4096)
         if not chunk:
             sys.exit("stdin closed, stopping.")
-        # The input arrives JSON-encoded ("cac40"), possibly several at once: keep the words.
+        # The input arrives JSON-encoded ("cac60"), possibly several at once: keep the words.
         for cmd in re.findall(r"[a-z0-9]+", chunk.decode(errors="ignore").lower()):
+            cmd = ALIASES.get(cmd, cmd)
             if cmd not in daily.MARKETS:
                 print(f"Unknown command '{cmd}', expected one of: {', '.join(daily.MARKETS)}")
                 continue

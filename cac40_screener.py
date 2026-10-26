@@ -1,7 +1,8 @@
 """
-CAC 40 screener: fetches prices and fundamentals from Yahoo Finance, computes
-technical / valuation indicators and a composite score, then writes a
-self-contained HTML report (cac40_report.html) plus the raw data (cac40_data.json).
+CAC 60 screener (CAC 40 + CAC Next 20): fetches prices and fundamentals from
+Yahoo Finance, computes technical / valuation indicators and a composite score,
+then writes a self-contained HTML report (cac60_report.html) plus the raw data
+(cac60_data.json).
 
 Usage:
     python cac40_screener.py            # generate report
@@ -28,19 +29,18 @@ import yfinance as yf
 
 HERE = Path(__file__).resolve().parent
 TEMPLATE = HERE / "template.html"
-OUT_HTML = HERE / "cac40_report.html"
-OUT_JSON = HERE / "cac40_data.json"
+OUT_HTML = HERE / "cac60_report.html"
+OUT_JSON = HERE / "cac60_data.json"
 # The Home Assistant add-on keeps its cache in its persistent /data folder.
 CACHE = Path(os.environ.get("BOURSICATEUR_CACHE") or HERE / ".cache" / "fundamentals.json")
 CACHE_HOURS = 24  # fundamentals move slowly: reuse them to avoid Yahoo rate limits
 
-# CAC 40 constituents (Yahoo tickers). The index composition changes a few times
-# a year: edit this list if needed. Unknown / delisted tickers are skipped.
+# CAC 40 and CAC Next 20 constituents (Yahoo tickers). The index compositions change
+# a few times a year: edit these lists if needed. Unknown / delisted tickers are skipped.
 CAC40 = {
     "AC.PA": "Accor",
     "AI.PA": "Air Liquide",
     "AIR.PA": "Airbus",
-    "ALO.PA": "Alstom",
     "MT.AS": "ArcelorMittal",
     "CS.PA": "AXA",
     "BNP.PA": "BNP Paribas",
@@ -51,7 +51,7 @@ CAC40 = {
     "ACA.PA": "Crédit Agricole",
     "BN.PA": "Danone",
     "DSY.PA": "Dassault Systèmes",
-    "EDEN.PA": "Edenred",
+    "FGR.PA": "Eiffage",
     "ENGI.PA": "Engie",
     "EL.PA": "EssilorLuxottica",
     "ERF.PA": "Eurofins Scientific",
@@ -79,6 +79,31 @@ CAC40 = {
     "VIE.PA": "Veolia",
     "DG.PA": "Vinci",
 }
+
+CAC_NEXT20 = {
+    "ABVX.PA": "Abivax",
+    "ALO.PA": "Alstom",
+    "AMUN.PA": "Amundi",
+    "AKE.PA": "Arkema",
+    "BIM.PA": "bioMérieux",
+    "AM.PA": "Dassault Aviation",
+    "EDEN.PA": "Edenred",
+    "GTT.PA": "Gaztransport & Technigaz",
+    "GET.PA": "Getlink",
+    "IPN.PA": "Ipsen",
+    "LI.PA": "Klépierre",
+    "NEX.PA": "Nexans",
+    "RXL.PA": "Rexel",
+    "DIM.PA": "Sartorius Stedim Biotech",
+    "SCR.PA": "SCOR",
+    "SW.PA": "Sodexo",
+    "SOI.PA": "Soitec",
+    "SPIE.PA": "SPIE",
+    "TE.PA": "Technip Energies",
+    "TEP.PA": "Teleperformance",
+}
+
+CAC60 = {**CAC40, **CAC_NEXT20}
 
 
 # --------------------------------------------------------------------------- #
@@ -472,7 +497,7 @@ def main():
     args = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")  # accents in names on the Windows console
 
-    write_report(build(CAC40, refresh=args.refresh),"CAC 40 Screener", OUT_HTML, OUT_JSON, "€", args.open)
+    write_report(build(CAC60, refresh=args.refresh), "CAC 60 Screener", OUT_HTML, OUT_JSON, "€", args.open)
 
 
 if __name__ == "__main__":
