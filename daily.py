@@ -13,6 +13,7 @@ import html
 import json
 import os
 import sys
+import time
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
@@ -103,16 +104,32 @@ def summarize(title: str, rows: list, previous: dict, link: str = None, cap: int
 # Outputs
 # --------------------------------------------------------------------------- #
 
+def _post_with_retry(url: str, attempts: int = 4, **kwargs):
+    """POST, retrying network errors (connection reset, timeout) and 5xx/429 with backoff."""
+    for attempt in range(1, attempts + 1):
+        try:
+            r = requests.post(url, **kwargs)
+            if r.status_code != 429 and r.status_code < 500:
+                r.raise_for_status()  # other 4xx (bad token, bad chat id...): no point retrying
+                return r
+            error = f"HTTP {r.status_code}"
+        except (requests.ConnectionError, requests.Timeout) as e:
+            error = e
+        if attempt == attempts:
+            raise requests.RequestException(f"{error} (after {attempts} attempts)")
+        delay = 10 * attempt
+        print(f"  ! Telegram attempt {attempt} failed ({error}), retrying in {delay}s", file=sys.stderr)
+        time.sleep(delay)
+
+
 def send_telegram(token: str, chat_id: str, text: str, attachment: Path = None):
     api = f"https://api.telegram.org/bot{token}"
-    r = requests.post(f"{api}/sendMessage", timeout=30, json={
+    _post_with_retry(f"{api}/sendMessage", timeout=30, json={
         "chat_id": chat_id, "text": text, "parse_mode": "HTML", "disable_web_page_preview": True})
-    r.raise_for_status()
     if attachment:
-        with attachment.open("rb") as f:
-            r = requests.post(f"{api}/sendDocument", timeout=120, data={"chat_id": chat_id},
-                              files={"document": (attachment.name, f, "text/html")})
-        r.raise_for_status()
+        content = attachment.read_bytes()  # re-sent as is on each retry
+        _post_with_retry(f"{api}/sendDocument", timeout=120, data={"chat_id": chat_id},
+                         files={"document": (attachment.name, content, "text/html")})
 
 
 def update_ha_sensor(market: str, title: str, rows: list, link: str = None):
